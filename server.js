@@ -1,15 +1,18 @@
-const express = require('express');
+
 // Import and require mysql2
 const mysql = require('mysql2');
 const path = require('path');
 const inquirer = require('inquirer');
+const cTable = require('console.table');
+const { Model, DataTypes } = require('sequelize');
+class employee extends Model { }
 
 const PORT = process.env.PORT || 3001;
-const app = express();
+
 
 // Express middleware
-app.use(express.urlencoded({ extended: false }));
-app.use(express.json());
+// app.use(express.urlencoded({ extended: false }));
+// app.use(express.json());
 
 // Connect to database
 const db = mysql.createConnection(
@@ -21,25 +24,42 @@ const db = mysql.createConnection(
         password: 'password',
         database: 'employees_db'
     },
-    console.log(`Connected to the e,[;puees_db database.`)
+    console.log(`Connected to the employee_db database.`)
 );
 
 const intialChoices = ["Veiw All Employees", "Add Employee", "Updated Employee Role", "View All Roles",
     "Add Role", "View All Departments", "Add Department"]
 
-viewAllEmployees = () => { }
+viewAllEmployees = () => {
+    db.query('select employee.id as employee_id, first_name, last_name, title, name as department_name, salary from employee JOIN role on role_id = role.id join department ON role.department_id = department.id;', (err, result) => {
+        console.table(result)
+    });
+    db.query('select e.first_name, m.first_name from employee e, employee m  where e.manager_id = m.id;', (err, result) => {
+        console.table(result)
+    });
+}
 
 addEmployees = () => { }
 
 updatedEmployeeRole = () => { }
 
-viewAllRoles = () => { }
+viewAllRoles = () => {
+    db.query('select title as job_title, role.id AS role_id, department.name AS department_name, salary from role JOIN department ON role.department_id = department.id;', (err, result) => {
+        console.table(result)
+    });
+}
 
 addRoles = () => { }
 
-viewAllDepartments = () => { }
+viewAllDepartments = () => {
+    db.query('select name AS department_name, id AS department_id from department;', (err, result) => {
+        console.table(result)
+    });
+}
 
-addDepartments = () => { }
+addDepartments = () => {
+
+}
 
 function init() {
     inquirer.prompt([
@@ -55,17 +75,17 @@ function init() {
             //     console.log(intialChoices[0]);
 
             switch (answers.Answer) {
-                case intialChoices[0]: console.log("test1");
+                case intialChoices[0]: viewAllEmployees();
                     break;
                 case intialChoices[1]: console.log("test2");
                     break;
                 case intialChoices[2]: console.log("test3");
                     break;
-                case intialChoices[3]: console.log("test4");
+                case intialChoices[3]: viewAllRoles();
                     break;
                 case intialChoices[4]: console.log("test5");
                     break;
-                case intialChoices[5]: console.log("test6");
+                case intialChoices[5]: viewAllDepartments();
                     break;
                 case intialChoices[6]: console.log("tes7");
 
