@@ -31,12 +31,13 @@ const intialChoices = ["Veiw All Employees", "Add Employee", "Updated Employee R
     "Add Role", "View All Departments", "Add Department"]
 
 viewAllEmployees = () => {
-    db.query('select employee.id as employee_id, first_name, last_name, title, name as department_name, salary from employee JOIN role on role_id = role.id join department ON role.department_id = department.id;', (err, result) => {
+    db.query(`select e.id as employee_id, e.first_name, e.last_name, title, name as department_name, 
+    salary, m.first_name as manager_first_name, m.last_name as manager_first_name from employee e, employee m  
+    JOIN role on role_id = role.id join department 
+    ON role.department_id = department.id where e.manager_id = m.id;`, (err, result) => {
         console.table(result)
     });
-    db.query('select e.first_name, m.first_name from employee e, employee m  where e.manager_id = m.id;', (err, result) => {
-        console.table(result)
-    });
+    init()
 }
 
 addEmployees = () => { }
@@ -47,6 +48,7 @@ viewAllRoles = () => {
     db.query('select title as job_title, role.id AS role_id, department.name AS department_name, salary from role JOIN department ON role.department_id = department.id;', (err, result) => {
         console.table(result)
     });
+    init()
 }
 
 addRoles = () => { }
@@ -55,9 +57,27 @@ viewAllDepartments = () => {
     db.query('select name AS department_name, id AS department_id from department;', (err, result) => {
         console.table(result)
     });
+    init()
 }
 
 addDepartments = () => {
+    inquirer.prompt([
+        {
+            type: 'input',
+            name: 'Answer',
+            message: 'What is this department called?',
+
+        },
+    ])
+        .then((answer) => {
+            console.log(answer.Answer)
+            db.query(`insert into department (name) values('${answer.Answer}');`, (err, result) => {
+                db.query('select name AS department_name, id AS department_id from department;', (err, result) => {
+                    console.table(result)
+                });
+            });
+            init()
+        })
 
 }
 
@@ -87,7 +107,7 @@ function init() {
                     break;
                 case intialChoices[5]: viewAllDepartments();
                     break;
-                case intialChoices[6]: console.log("tes7");
+                case intialChoices[6]: addDepartments();
 
 
             }
