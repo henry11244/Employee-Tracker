@@ -34,9 +34,9 @@ const intialChoices = ["Veiw All Employees", "Add Employee", "Updated Employee R
 
 viewAllEmployees = () => {
     db.query(`select e.id as employee_id, e.first_name, e.last_name, title, name as department_name, 
-    salary, m.first_name as manager_first_name, m.last_name as manager_first_name from employee e, employee m  
+    salary, m.first_name as manager_first_name, m.last_name as manager_last_name from employee m, employee e  
     JOIN role on role_id = role.id join department 
-    ON role.department_id = department.id where e.manager_id = m.id;`, (err, result) => {
+    ON role.department_id = department.id where m.id = e.manager_id;`, (err, result) => {
         console.log("\n");
         console.table(result);
         console.log("\n");
@@ -73,7 +73,6 @@ addEmployees = () => {
 
     ])
         .then((answer) => {
-            console.log(answer.Answer)
             db.query(`insert into employee (first_name, last_name, manager_id, role_id) values('${answer.fName}', '${answer.lName}', ${answer.managerID}, ${answer.roleID});`, (err, result) => {
                 db.query('select * from employee;', (err, result) => {
                     console.log("\n");
@@ -114,7 +113,6 @@ updatedEmployeeRole = () => {
 
 updatedEmployeeRole = () => {
     db.query(`select * from employee;`, (err, result) => {
-        console.log(result)
         var employees = result
         var employeeListing = []
         var employeeIDs = {}
@@ -124,7 +122,6 @@ updatedEmployeeRole = () => {
             employeeIDs[employeeName] = employees[i].id
         }
         db.query(`select * from role;`, (err, result) => {
-            console.log(result)
             var roles = result
             var roleListing = []
             var roleIDListing = {}
@@ -195,7 +192,6 @@ addRoles = () => {
 
     ])
         .then((answer) => {
-            console.log(answer.Answer)
             db.query(`insert into role (title, salary, department_id) values('${answer.title}', ${answer.salary}, ${answer.departmentID});`, (err, result) => {
                 db.query('select * from role;', (err, result) => {
                     console.log("\n");
@@ -241,7 +237,6 @@ addDepartments = () => {
 
 UpdateEmloyeeManager = () => {
     db.query(`select * from employee;`, (err, result) => {
-        console.log(result)
         var employees = result
         var employeeListing = []
         var employeeIDs = {}
@@ -268,9 +263,6 @@ UpdateEmloyeeManager = () => {
                     choices: employeeListing
                 },
             ]).then((answer) => {
-                console.log(employeeIDs[answer.UpdatedManager])
-                console.log(updatedEmployee)
-
                 db.query(`update employee set manager_id = ${employeeIDs[answer.UpdatedManager]} where id =${updatedEmployee} ;`, (err, result) => {
                     db.query('select * from employee;', (err, result) => {
                         console.log("\n");
@@ -293,8 +285,10 @@ ViewEmployeesbyDepartment = () => { }
 Delete = () => { }
 
 ViewBudget = () => {
-    db.query(`select name as Department_Name, sum(salary) as Total_Salary from department  join role on department.id = role.department_id group by name;`, (err, result) => {
-        console.table(result)
+    db.query(`select name as department_id, sum(salary) as total_salary from department  join role on department.id = role.department_id group by name;`, (err, result) => {
+        console.log("\n");
+        console.table(result);
+        console.log("\n");
         init()
     })
 }

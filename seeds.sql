@@ -23,5 +23,5 @@ VALUES ("Douglas (Dr. Evil)", "Powers", null, 1),
        ("Elon", "Musk", 4, 5),
        ("Newbie","Developer", 4, 6),
        ("The Best", "Marketer", 1, 7),
-       ("Robert", "Half", 8, 1);
+       ("Robert", "Half", 8, 8);
            
