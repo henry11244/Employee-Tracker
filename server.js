@@ -10,11 +10,6 @@ class employee extends Model { }
 
 const PORT = process.env.PORT || 3001;
 
-
-// Express middleware
-// app.use(express.urlencoded({ extended: false }));
-// app.use(express.json());
-
 // Connect to database
 const db = mysql.createConnection(
     {
@@ -84,34 +79,7 @@ addEmployees = () => {
         })
 }
 
-updatedEmployeeRole = () => {
-    inquirer.prompt([
-        {
-            type: 'input',
-            name: 'employeeID',
-            message: `What is the ID of the employee you wish to update?`,
-
-        },
-        {
-            type: 'input',
-            name: 'newRoleID',
-            message: `What is the new role ID for this employee?`,
-
-        },
-    ])
-        .then((answer) => {
-            db.query(`update employee set role_id = ${answer.newRoleID} where id =${answer.employeeID} ;`, (err, result) => {
-                db.query('select * from employee;', (err, result) => {
-                    console.log("\n");
-                    console.table(result)
-                    console.log("\n");
-                });
-            });
-            init()
-        })
-}
-
-updatedEmployeeRole = () => {
+updateEmployeeRole = () => {
     db.query(`select * from employee;`, (err, result) => {
         var employees = result
         var employeeListing = []
@@ -157,8 +125,6 @@ updatedEmployeeRole = () => {
     }
     )
 }
-
-
 
 viewAllRoles = () => {
     db.query('select title as job_title, role.id AS role_id, department.name AS department_name, salary from role JOIN department ON role.department_id = department.id;', (err, result) => {
@@ -222,7 +188,6 @@ addDepartments = () => {
         },
     ])
         .then((answer) => {
-            console.log(answer.Answer)
             db.query(`insert into department (name) values('${answer.Answer}');`, (err, result) => {
                 db.query('select name AS department_name, id AS department_id from department;', (err, result) => {
                     console.log("\n");
@@ -277,8 +242,36 @@ UpdateEmloyeeManager = () => {
 }
 
 
+ViewEmloyeebyManager = () => {
+    db.query(`select m.first_name, m.last_name, m.id from employee m, employee e  
+      where m.id = e.manager_id group by m.first_name;`, (err, result) => {
+        var managers = result
+        var managerListing = []
+        var managerIDs = {}
+        for (i = 0; i < managers.length; i++) {
+            let managerName = managers[i].first_name + ' ' + managers[i].last_name
+            managerListing.push(managerName)
+            managerIDs[managerName] = managers[i].id
+        }
+        inquirer.prompt([
+            {
+                type: 'list',
+                name: 'manager',
+                message: 'Which manager do you wish to view?',
+                choices: managerListing
+            },
+        ]).then((answer) => {
+            var managerID = managerIDs[answer.manager]
+            db.query(`select * from employee where manager_id = ${managerID};`, (err, result) => {
+                console.log("\n");
+                console.table(result)
+                console.log("\n");
+            });
+            init()
+        })
+    });
 
-ViewEmloyeebyManager = () => { }
+}
 
 ViewEmployeesbyDepartment = () => { }
 
@@ -313,7 +306,7 @@ function init() {
                     break;
                 case intialChoices[1]: addEmployees();
                     break;
-                case intialChoices[2]: updatedEmployeeRole();
+                case intialChoices[2]: updateEmployeeRole();
                     break;
                 case intialChoices[3]: viewAllRoles();
                     break;
@@ -325,7 +318,7 @@ function init() {
                     break;
                 case intialChoices[7]: UpdateEmloyeeManager();
                     break;
-                case intialChoices[8]: return;
+                case intialChoices[8]: ViewEmloyeebyManager();
                     break;
                 case intialChoices[9]: return;
                     break;
