@@ -241,7 +241,6 @@ UpdateEmloyeeManager = () => {
     })
 }
 
-
 ViewEmloyeebyManager = () => {
     db.query(`select m.first_name, m.last_name, m.id from employee m, employee e  
       where m.id = e.manager_id group by m.first_name;`, (err, result) => {
@@ -270,10 +269,35 @@ ViewEmloyeebyManager = () => {
             init()
         })
     });
-
 }
 
-ViewEmployeesbyDepartment = () => { }
+ViewEmployeesbyDepartment = () => {
+    db.query(`select * from department;`, (err, result) => {
+        var departments = result
+        var departmentListing = []
+        var departmentIDs = {}
+        for (i = 0; i < departments.length; i++) {
+            departmentListing.push(departments[i].name)
+            departmentIDs[departments[i].name] = departments[i].id
+        }
+        inquirer.prompt([
+            {
+                type: 'list',
+                name: 'department',
+                message: 'Which department do you wish to view employees for?',
+                choices: departmentListing
+            },
+        ]).then((answer) => {
+            var departmentID = departmentIDs[answer.department]
+            db.query(`select * from employee join role on role.id = role_id join department on department.id = role.department_id where department_id = ${departmentID};`, (err, result) => {
+                console.log("\n");
+                console.table(result)
+                console.log("\n");
+            });
+            init()
+        })
+    });
+}
 
 Delete = () => { }
 
@@ -320,7 +344,7 @@ function init() {
                     break;
                 case intialChoices[8]: ViewEmloyeebyManager();
                     break;
-                case intialChoices[9]: return;
+                case intialChoices[9]: ViewEmployeesbyDepartment();
                     break;
                 case intialChoices[10]: return;
                     break;
