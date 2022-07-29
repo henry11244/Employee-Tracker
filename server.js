@@ -27,6 +27,8 @@ const intialChoices = ["Veiw All Employees", "Add Employee", "Updated Employee R
     "Add Role", "View All Departments", "Add Department", "Update an Employee Manager",
     "View Emloyee by Manager", "View Employees by Department", "Delete Department, Role or Employee", "View Total Department Budget", "Exit"]
 
+const deleteVariable = ['department', 'role', 'employee']
+
 viewAllEmployees = () => {
     db.query(`select e.id as employee_id, e.first_name, e.last_name, title, name as department_name, 
     salary, m.first_name as manager_first_name, m.last_name as manager_last_name from employee m, employee e  
@@ -299,7 +301,57 @@ ViewEmployeesbyDepartment = () => {
     });
 }
 
-Delete = () => { }
+Delete = () => {
+    inquirer.prompt([
+        {
+            type: 'list',
+            name: 'deleteItem',
+            message: 'What do you want to delete?',
+            choices: deleteVariable
+        },
+    ]).then((answer) => {
+        var deleteItem = answer.deleteItem
+        if (deleteItem = 'employee') {
+            db.query(`select * from employee;`,
+                (err, result) => {
+                    var employees = result
+                    var employeeListing = []
+                    var employeeIDs = {}
+                    for (i = 0; i < employees.length; i++) {
+                        let employeeName = employees[i].first_name + ' ' + employees[i].last_name
+                        employeeListing.push(employeeName)
+                        employeeIDs[employeeName] = employees[i].id
+                    }
+                    inquirer.prompt([
+                        {
+                            type: 'list',
+                            name: 'deletedEmployee',
+                            message: 'Which employee do you wish to delete?',
+                            choices: employeeListing
+                        },
+                    ]).then((answer) => {
+                        deletedEmployee = employeeIDs[answer.deletedEmployee]
+                        db.query(`delete from employee where id = ${deletedEmployee};`, (err, result) => {
+                            db.query(`select * from employee;`,
+                                (err, result) => {
+                                    console.log("\n");
+                                    console.table(result)
+                                    console.log("\n");
+                                })
+                        });
+
+
+                    })
+
+                })
+        };
+        init()
+    })
+}
+
+// console.log("\n");
+// console.table(result)
+// console.log("\n");
 
 ViewBudget = () => {
     db.query(`select name as department_id, sum(salary) as total_salary from department  join role on department.id = role.department_id group by name;`, (err, result) => {
@@ -309,8 +361,6 @@ ViewBudget = () => {
         init()
     })
 }
-
-
 
 function init() {
     inquirer.prompt([
@@ -346,7 +396,7 @@ function init() {
                     break;
                 case intialChoices[9]: ViewEmployeesbyDepartment();
                     break;
-                case intialChoices[10]: return;
+                case intialChoices[10]: Delete();
                     break;
                 case intialChoices[11]: ViewBudget();
                     break;
