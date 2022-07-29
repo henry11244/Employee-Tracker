@@ -5,6 +5,7 @@ const path = require('path');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
 const { Model, DataTypes } = require('sequelize');
+const { exit } = require('process');
 class employee extends Model { }
 
 const PORT = process.env.PORT || 3001;
@@ -28,14 +29,17 @@ const db = mysql.createConnection(
 );
 
 const intialChoices = ["Veiw All Employees", "Add Employee", "Updated Employee Role", "View All Roles",
-    "Add Role", "View All Departments", "Add Department"]
+    "Add Role", "View All Departments", "Add Department", "Update an Employee Manager",
+    "View Emloyee by Manager", "View Employees by Department", "Delete Department, Role or Employee", "View Total Department Budget", "Exit"]
 
 viewAllEmployees = () => {
     db.query(`select e.id as employee_id, e.first_name, e.last_name, title, name as department_name, 
     salary, m.first_name as manager_first_name, m.last_name as manager_first_name from employee e, employee m  
     JOIN role on role_id = role.id join department 
     ON role.department_id = department.id where e.manager_id = m.id;`, (err, result) => {
-        console.table(result)
+        console.log("\n");
+        console.table(result);
+        console.log("\n");
     });
     init()
 }
@@ -72,7 +76,9 @@ addEmployees = () => {
             console.log(answer.Answer)
             db.query(`insert into employee (first_name, last_name, manager_id, role_id) values('${answer.fName}', '${answer.lName}', ${answer.managerID}, ${answer.roleID});`, (err, result) => {
                 db.query('select * from employee;', (err, result) => {
+                    console.log("\n");
                     console.table(result)
+                    console.log("\n");
                 });
             });
             init()
@@ -97,7 +103,9 @@ updatedEmployeeRole = () => {
         .then((answer) => {
             db.query(`update employee set role_id = ${answer.newRoleID} where id =${answer.employeeID} ;`, (err, result) => {
                 db.query('select * from employee;', (err, result) => {
+                    console.log("\n");
                     console.table(result)
+                    console.log("\n");
                 });
             });
             init()
@@ -141,7 +149,9 @@ updatedEmployeeRole = () => {
                 .then((answer) => {
                     db.query(`update employee set role_id = ${roleIDListing[answer.UpdatedRole]} where id =${employeeIDs[answer.UpdatedEmployee]} ;`, (err, result) => {
                         db.query('select * from employee;', (err, result) => {
-                            console.table(result)
+                            console.log("\n");
+                            console.table(result);
+                            console.log("\n");
                         });
                     });
                     init()
@@ -155,7 +165,9 @@ updatedEmployeeRole = () => {
 
 viewAllRoles = () => {
     db.query('select title as job_title, role.id AS role_id, department.name AS department_name, salary from role JOIN department ON role.department_id = department.id;', (err, result) => {
-        console.table(result)
+        console.log("\n");
+        console.table(result);
+        console.log("\n");
     });
     init()
 }
@@ -186,7 +198,9 @@ addRoles = () => {
             console.log(answer.Answer)
             db.query(`insert into role (title, salary, department_id) values('${answer.title}', ${answer.salary}, ${answer.departmentID});`, (err, result) => {
                 db.query('select * from role;', (err, result) => {
-                    console.table(result)
+                    console.log("\n");
+                    console.table(result);
+                    console.log("\n");
                 });
             });
             init()
@@ -195,7 +209,9 @@ addRoles = () => {
 
 viewAllDepartments = () => {
     db.query('select name AS department_name, id AS department_id from department;', (err, result) => {
-        console.table(result)
+        console.log("\n");
+        console.table(result);
+        console.log("\n");
     });
     init()
 }
@@ -213,13 +229,72 @@ addDepartments = () => {
             console.log(answer.Answer)
             db.query(`insert into department (name) values('${answer.Answer}');`, (err, result) => {
                 db.query('select name AS department_name, id AS department_id from department;', (err, result) => {
+                    console.log("\n");
                     console.table(result)
+                    console.log("\n");
                 });
             });
             init()
         })
 
 }
+
+UpdateEmloyeeManager = () => {
+    db.query(`select * from employee;`, (err, result) => {
+        console.log(result)
+        var employees = result
+        var employeeListing = []
+        var employeeIDs = {}
+        for (i = 0; i < employees.length; i++) {
+            let employeeName = employees[i].first_name + ' ' + employees[i].last_name
+            employeeListing.push(employeeName)
+            employeeIDs[employeeName] = employees[i].id
+        }
+        inquirer.prompt([
+            {
+                type: 'list',
+                name: 'UpdatedEmployee',
+                message: 'Which employee do you wish to update?',
+                choices: employeeListing
+            },
+        ]).then((answer) => {
+            employeeListing.splice(employeeListing.indexOf(answer.UpdatedEmployee), 1)
+            var updatedEmployee = employeeIDs[answer.UpdatedEmployee]
+            inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'UpdatedManager',
+                    message: 'Who is their new Manager?',
+                    choices: employeeListing
+                },
+            ]).then((answer) => {
+                console.log(employeeIDs[answer.UpdatedManager])
+                console.log(updatedEmployee)
+
+                db.query(`update employee set manager_id = ${employeeIDs[answer.UpdatedManager]} where id =${updatedEmployee} ;`, (err, result) => {
+                    db.query('select * from employee;', (err, result) => {
+                        console.log("\n");
+                        console.table(result);
+                        console.log("\n");
+                    });
+                });
+                init()
+            })
+        })
+    })
+}
+
+
+
+ViewEmloyeebyManager = () => { }
+
+ViewEmployeesbyDepartment = () => { }
+
+Delete = () => { }
+
+ViewBudget = () => { }
+
+
 
 function init() {
     inquirer.prompt([
@@ -248,7 +323,19 @@ function init() {
                 case intialChoices[5]: viewAllDepartments();
                     break;
                 case intialChoices[6]: addDepartments();
-
+                    break;
+                case intialChoices[7]: UpdateEmloyeeManager();
+                    break;
+                case intialChoices[8]: return;
+                    break;
+                case intialChoices[9]: return;
+                    break;
+                case intialChoices[10]: return;
+                    break;
+                case intialChoices[11]: return;
+                    break;
+                case intialChoices[12]: exit();
+                    break;
 
             }
         });
