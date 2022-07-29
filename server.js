@@ -311,7 +311,7 @@ Delete = () => {
         },
     ]).then((answer) => {
         var deleteItem = answer.deleteItem
-        if (deleteItem = 'employee') {
+        if (deleteItem == 'employee') {
             db.query(`select * from employee;`,
                 (err, result) => {
                     var employees = result
@@ -337,21 +337,52 @@ Delete = () => {
                                     console.log("\n");
                                     console.table(result)
                                     console.log("\n");
+                                    init()
                                 })
                         });
-
-
                     })
-
                 })
-        };
-        init()
+        } else {
+            db.query(`select * from ${answer.deleteItem};`,
+                (err, result) => {
+                    var deleteData = result
+                    var deleteVariableListing = []
+                    var deleteVariableIDs = {}
+                    if (deleteItem == 'role') {
+                        for (i = 0; i < deleteData.length; i++) {
+                            deleteVariableListing.push(deleteData[i].title)
+                            deleteVariableIDs[deleteData[i].title] = deleteData[i].id
+                        }
+                    } else {
+                        console.log('test')
+                        for (i = 0; i < deleteData.length; i++) {
+                            deleteVariableListing.push(deleteData[i].name)
+                            deleteVariableIDs[deleteData[i].name] = deleteData[i].id
+                        }
+                    }
+                    inquirer.prompt([
+                        {
+                            type: 'list',
+                            name: 'deletedVariable',
+                            message: 'Which item do you wish to delete?',
+                            choices: deleteVariableListing
+                        },
+                    ]).then((answer) => {
+                        deletedVariableid = deleteVariableIDs[answer.deletedVariable]
+                        db.query(`delete from ${deleteItem} where id = ${deletedVariableid};`, (err, result) => {
+                            db.query(`select * from ${deleteItem};`,
+                                (err, result) => {
+                                    console.log("\n");
+                                    console.table(result)
+                                    console.log("\n");
+                                    init()
+                                })
+                        })
+                    })
+                });
+        }
     })
 }
-
-// console.log("\n");
-// console.table(result)
-// console.log("\n");
 
 ViewBudget = () => {
     db.query(`select name as department_id, sum(salary) as total_salary from department  join role on department.id = role.department_id group by name;`, (err, result) => {
