@@ -104,6 +104,55 @@ updatedEmployeeRole = () => {
         })
 }
 
+updatedEmployeeRole = () => {
+    db.query(`select * from employee;`, (err, result) => {
+        console.log(result)
+        var employees = result
+        var employeeListing = []
+        var employeeIDs = {}
+        for (i = 0; i < employees.length; i++) {
+            let employeeName = employees[i].first_name + ' ' + employees[i].last_name
+            employeeListing.push(employeeName)
+            employeeIDs[employeeName] = employees[i].id
+        }
+        db.query(`select * from role;`, (err, result) => {
+            console.log(result)
+            var roles = result
+            var roleListing = []
+            var roleIDListing = {}
+            for (i = 0; i < roles.length; i++) {
+                roleListing.push(roles[i].title)
+                roleIDListing[roles[i].title] = roles[i].id
+            }
+            inquirer.prompt([
+                {
+                    type: 'list',
+                    name: 'UpdatedEmployee',
+                    message: 'Which employee do you wish to update?',
+                    choices: employeeListing
+                },
+                {
+                    type: 'list',
+                    name: 'UpdatedRole',
+                    message: 'What is their new role?',
+                    choices: roleListing
+                },
+            ])
+                .then((answer) => {
+                    db.query(`update employee set role_id = ${roleIDListing[answer.UpdatedRole]} where id =${employeeIDs[answer.UpdatedEmployee]} ;`, (err, result) => {
+                        db.query('select * from employee;', (err, result) => {
+                            console.table(result)
+                        });
+                    });
+                    init()
+                })
+        })
+    }
+    )
+}
+
+
+
 viewAllRoles = () => {
     db.query('select title as job_title, role.id AS role_id, department.name AS department_name, salary from role JOIN department ON role.department_id = department.id;', (err, result) => {
         console.table(result)
