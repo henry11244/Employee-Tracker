@@ -87,7 +87,7 @@ npm start
 
 Refer to video linked below for a working demonstration of the application:
 
-[![Watch the video](img/EmployeeTrackerImg1.png)](https://drive.google.com/file/d/1ozgM0iFh8nO7bt6GAUExz6ymFJyvkB90/view?usp=sharing)
+[![Watch the video](img/EmployeeTrackerImg1.png)](https://drive.google.com/file/d/17plrMONmyfrC5piT4vPb3McqgKzCgZU_/view?usp=sharing)
 
 
 <p align="right">(<a href="#top">back to top</a>)</p>
