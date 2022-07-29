@@ -1,14 +1,10 @@
-
 // Import and require mysql2
 const mysql = require('mysql2');
-const path = require('path');
 const inquirer = require('inquirer');
 const cTable = require('console.table');
 const { Model, DataTypes } = require('sequelize');
 const { exit } = require('process');
 class employee extends Model { }
-
-const PORT = process.env.PORT || 3001;
 
 // Connect to database
 const db = mysql.createConnection(
@@ -31,13 +27,20 @@ resultFunction = (result) => {
     init()
 }
 
+// query all columns from a table
+resultQuery = (table) => {
+    db.query(`select * from ${table};`, (err, result) => {
+        resultFunction(result);
+    })
+};
+
 // options for users
 const intialChoices = ["Veiw All Employees", "Add Employee", "Updated Employee Role", "View All Roles",
     "Add Role", "View All Departments", "Add Department", "Update an Employee Manager",
     "View Emloyee by Manager", "View Employees by Department", "Delete Department, Role or Employee", "View Total Department Budget", "Exit"]
 
 // variables for delete option
-const deleteVariable = ['department', 'role', 'employee']
+const tables = ['department', 'role', 'employee']
 
 // view all employee function
 viewAllEmployees = () => {
@@ -74,10 +77,8 @@ addEmployees = () => {
         },
     ])
         .then((answer) => {
-            db.query(`insert into employee (first_name, last_name, manager_id, role_id) values('${answer.fName}', '${answer.lName}', ${answer.managerID}, ${answer.roleID});`, (err, result) => {
-                db.query('select * from employee;', (err, result) => {
-                    resultFunction(result);
-                });
+            db.query(`insert into employee (first_name, last_name, manager_id, role_id) values(?,?,?,?);`, [answer.fName, answer.lName, answer.managerID, answer.roleID], (err, result) => {
+                resultQuery(tables[2])
             });
         })
 }
@@ -116,10 +117,8 @@ updateEmployeeRole = () => {
                 },
             ])
                 .then((answer) => {
-                    db.query(`update employee set role_id = ${roleIDListing[answer.UpdatedRole]} where id =${employeeIDs[answer.UpdatedEmployee]} ;`, (err, result) => {
-                        db.query('select * from employee;', (err, result) => {
-                            resultFunction(result);
-                        });
+                    db.query(`update employee set role_id = ? where id =? ;`, [roleIDListing[answer.UpdatedRole], employeeIDs[answer.UpdatedEmployee]], (err, result) => {
+                        resultQuery(tables[2])
                     });
                 })
         })
@@ -154,10 +153,8 @@ addRoles = () => {
         },
     ])
         .then((answer) => {
-            db.query(`insert into role (title, salary, department_id) values('${answer.title}', ${answer.salary}, ${answer.departmentID});`, (err, result) => {
-                db.query('select * from role;', (err, result) => {
-                    resultFunction(result);
-                });
+            db.query(`insert into role (title, salary, department_id) values(?, ?, ?);`, [answer.title, answer.salary, answer.departmentID], (err, result) => {
+                resultQuery(tables[1])
             });
         })
 }
@@ -180,7 +177,7 @@ addDepartments = () => {
         },
     ])
         .then((answer) => {
-            db.query(`insert into department (name) values('${answer.Answer}');`, (err, result) => {
+            db.query(`insert into department (name) values(?);`, answer.Answer, (err, result) => {
                 db.query('select name AS department_name, id AS department_id from department;', (err, result) => {
                     resultFunction(result);
                 });
@@ -218,10 +215,8 @@ UpdateEmloyeeManager = () => {
                     choices: employeeListing
                 },
             ]).then((answer) => {
-                db.query(`update employee set manager_id = ${employeeIDs[answer.UpdatedManager]} where id =${updatedEmployee} ;`, (err, result) => {
-                    db.query('select * from employee;', (err, result) => {
-                        resultFunction(result);
-                    });
+                db.query(`update employee set manager_id = ? where id =? ;`, [employeeIDs[answer.UpdatedManager], updatedEmployee], (err, result) => {
+                    resultQuery(tables[2])
                 });
             })
         })
@@ -248,8 +243,7 @@ ViewEmloyeebyManager = () => {
                 choices: managerListing
             },
         ]).then((answer) => {
-            var managerID = managerIDs[answer.manager]
-            db.query(`select * from employee where manager_id = ${managerID};`, (err, result) => {
+            db.query(`select * from employee where manager_id = ?;`, managerIDs[answer.manager], (err, result) => {
                 resultFunction(result);
             });
         })
@@ -274,8 +268,7 @@ ViewEmployeesbyDepartment = () => {
                 choices: departmentListing
             },
         ]).then((answer) => {
-            var departmentID = departmentIDs[answer.department]
-            db.query(`select * from employee join role on role.id = role_id join department on department.id = role.department_id where department_id = ${departmentID};`, (err, result) => {
+            db.query(`select * from employee join role on role.id = role_id join department on department.id = role.department_id where department_id = ?;`, departmentIDs[answer.department], (err, result) => {
                 resultFunction(result);
             });
         })
@@ -289,7 +282,7 @@ Delete = () => {
             type: 'list',
             name: 'deleteItem',
             message: 'What do you want to delete?',
-            choices: deleteVariable
+            choices: tables
         },
     ]).then((answer) => {
         var deleteItem = answer.deleteItem
@@ -312,12 +305,8 @@ Delete = () => {
                             choices: employeeListing
                         },
                     ]).then((answer) => {
-                        deletedEmployee = employeeIDs[answer.deletedEmployee]
-                        db.query(`delete from employee where id = ${deletedEmployee};`, (err, result) => {
-                            db.query(`select * from employee;`,
-                                (err, result) => {
-                                    resultFunction(result);
-                                })
+                        db.query(`delete from employee where id = ?;`, employeeIDs[answer.deletedEmployee], (err, result) => {
+                            resultQuery(tables[2])
                         });
                     })
                 })
@@ -333,7 +322,6 @@ Delete = () => {
                             deleteVariableIDs[deleteData[i].title] = deleteData[i].id
                         }
                     } else {
-                        console.log('test')
                         for (i = 0; i < deleteData.length; i++) {
                             deleteVariableListing.push(deleteData[i].name)
                             deleteVariableIDs[deleteData[i].name] = deleteData[i].id
@@ -347,12 +335,8 @@ Delete = () => {
                             choices: deleteVariableListing
                         },
                     ]).then((answer) => {
-                        deletedVariableid = deleteVariableIDs[answer.deletedVariable]
-                        db.query(`delete from ${deleteItem} where id = ${deletedVariableid};`, (err, result) => {
-                            db.query(`select * from ${deleteItem};`,
-                                (err, result) => {
-                                    resultFunction(result);
-                                })
+                        db.query(`delete from ${deleteItem} where id = ${deleteVariableIDs[answer.deletedVariable]};`, (err, result) => {
+                            resultQuery(deleteItem)
                         })
                     })
                 });

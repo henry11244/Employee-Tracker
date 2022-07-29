@@ -76,7 +76,13 @@ quit
 ```
 
 
-- Then type the following into the command prompt to run the employee tracking application.
+- Within the server.js file, you will need to update your MySQL password to the password you set when you installed MySQL.
+
+<img src = 'img/EmployeeTrackerImg3.png'>
+
+<br>
+
+- Type the following into the command prompt to run the employee tracking application.
 ```
 npm start
 ```
