@@ -292,7 +292,12 @@ ViewEmployeesbyDepartment = () => { }
 
 Delete = () => { }
 
-ViewBudget = () => { }
+ViewBudget = () => {
+    db.query(`select name as Department_Name, sum(salary) as Total_Salary from department  join role on department.id = role.department_id group by name;`, (err, result) => {
+        console.table(result)
+        init()
+    })
+}
 
 
 
@@ -332,7 +337,7 @@ function init() {
                     break;
                 case intialChoices[10]: return;
                     break;
-                case intialChoices[11]: return;
+                case intialChoices[11]: ViewBudget();
                     break;
                 case intialChoices[12]: exit();
                     break;
